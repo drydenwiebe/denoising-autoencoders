@@ -36,17 +36,6 @@ test_data = datasets.MNIST(root='data', train=False, download=True, transform=tr
 train_loader = torch.utils.data.DataLoader(train_data, batch_size=batch_size, num_workers=num_workers, shuffle=True)
 test_loader = torch.utils.data.DataLoader(test_data, batch_size=batch_size, num_workers=num_workers, shuffle=True)
 
-# obtain one batch of trainng images
-dataiter = iter(train_loader)
-images, labels = dataiter.next()
-images = images.numpy()
-
-# get one image from the batch 
-img = np.squeeze(images[0])
-fig = plt.figure(figsize=(5,5))
-ax = fig.add_subplot(111)
-ax.imshow(img, cmap='gray')
-
 # define the neural network architecture
 class ConvolutionalDenoiser(nn.Module):
     def __init__(self):
