@@ -38,6 +38,8 @@ n_epochs = 10
 noise_factor = 0.5
 # defines the size of the latent space
 latent_space = 8
+# weight decay for ADAM
+weight_decay=1e-5
 
 # MNIST dataset 
 train_dataset = torchvision.datasets.MNIST(root='../../data', 
@@ -67,6 +69,11 @@ def ignore_warnings(f):
             response = f(*args, **kwargs)
         return response
     return inner
+
+if torch.cuda.is_available():
+    cuda = True
+else:
+    cuda = False
 
 # define the neural network architecture
 class Denoiser(nn.Module):
@@ -124,9 +131,12 @@ def run_denoiser():
     criterion = nn.MSELoss()
 
     # specify loss function
-    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=1e-5)
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
 
     for epoch in range(1, n_epochs+1):
+        # put the model in training mode
+        model.train()
+
         # monitor training loss
         train_loss = 0.0
         
@@ -138,7 +148,7 @@ def run_denoiser():
             # no need to flatten images
             images, _ = data
             
-            ## add random noise to the input images
+            # add random noise to the input images
             noisy_imgs = images + noise_factor * torch.randn(*images.shape)
             # Clip the images to be between 0 and 1
             noisy_imgs = np.clip(noisy_imgs, 0., 1.)
@@ -166,6 +176,9 @@ def run_denoiser():
         # print avg training statistics 
         train_loss = train_loss/len(train_loader)
         print('Epoch: {} \tTraining Loss: {:.6f}'.format(epoch, train_loss))
+
+    # put the model in evaluation mode
+    model.eval()
 
     # obtain one batch of test images
     dataiter = iter(test_loader)
