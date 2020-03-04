@@ -35,25 +35,25 @@ transform = transforms.ToTensor()
 # Create training and test dataloaders
 num_workers = 0
 # how many samples per batch to load
-batch_size = 20
+batch_size = 500
 # if we use dropout or not
 dropout = False
 # define the learning rate
 learning_rate = 0.001
 # number of epochs to train the model
-n_epochs = 1
+n_epochs = 2
 # for adding noise to images
 noise_factor=0.5
 # defines the size of the latent space
-latent_space_size = 16
+latent_space_size = 32
 # weight decay for ADAM
 weight_decay=1e-5
 # interval for printing
 log_interval = 100
 
 # load the training and test datasets
-train_data = datasets.MNIST(root='data', train=True, download=True, transform=transform)
-test_data = datasets.MNIST(root='data', train=False, download=True, transform=transform)
+train_data = datasets.SVHN(root='data_colour', split='train', download=True, transform=transform)
+test_data = datasets.SVHN(root='data_colour', split='test', download=True, transform=transform)
 
 # prepare data loaders
 train_loader = torch.utils.data.DataLoader(train_data, batch_size=batch_size, num_workers=num_workers, shuffle=True)
@@ -68,7 +68,7 @@ class ConvolutionalDenoiser(nn.Module):
         encoder
         '''
         # conv layer (depth from 1 --> 32), 3x3 kernels
-        self.conv1 = nn.Conv2d(1, 32, 3, padding=1)  
+        self.conv1 = nn.Conv2d(3, 32, 3, padding=1)  
         # conv layer (depth from 32 --> 16), 3x3 kernels
         self.conv2 = nn.Conv2d(32, 16, 3, padding=1)
         # conv layer (depth from 16 --> 8), 3x3 kernels
@@ -79,22 +79,22 @@ class ConvolutionalDenoiser(nn.Module):
         # create a [batch_size, latent_space_size vector]
         self.conv_latent = nn.Conv2d(8, 1, 3, padding=1)
 
-        self.fc1_1 = nn.Linear(49, latent_space_size)
-        self.fc1_2 = nn.Linear(49, latent_space_size)
+        self.fc1_1 = nn.Linear(64, latent_space_size)
+        self.fc1_2 = nn.Linear(64, latent_space_size)
 
         '''
         decoder
         '''
 
         # layer from the decoder that takes the latent space 
-        self.fc2 = nn.Linear(latent_space_size, 49)
+        self.fc2 = nn.Linear(latent_space_size, 64)
         # transpose layer, a kernel of 2 and a stride of 2 will increase the spatial dims by 2
         self.t_conv1 = nn.ConvTranspose2d(1, 8, 3, padding=1)  # kernel_size=3 to get to a 7x7 image output
         # two more transpose layers with a kernel of 2
         self.t_conv2 = nn.ConvTranspose2d(8, 16, 2, stride=2)
         self.t_conv3 = nn.ConvTranspose2d(16, 32, 2, stride=2)
         # one, final, normal conv layer to decrease the depth
-        self.conv_out = nn.Conv2d(32, 1, 3, padding=1)
+        self.conv_out = nn.Conv2d(32, 3, 3, padding=1)
 
     def encode(self, x):
         '''
@@ -110,8 +110,8 @@ class ConvolutionalDenoiser(nn.Module):
         # add third hidden layer
         x = F.relu(self.conv3(x))
         #x = self.pool(x)  # compressed representation
-        
-        x = F.relu(self.conv_latent(x).view(-1, 49))
+
+        x = F.relu(self.conv_latent(x).view(-1, 64))
 
         return self.fc1_1(x), self.fc1_2(x)
 
@@ -123,7 +123,7 @@ class ConvolutionalDenoiser(nn.Module):
     def decode(self, z):
 
         x = F.relu(self.fc2(z))
-        x = x.view(batch_size, 1, 7, 7)
+        x = x.view(x.shape[0], 1, 8, 8)
 
         '''
         decode
@@ -145,7 +145,10 @@ class ConvolutionalDenoiser(nn.Module):
 # Reconstruction + KL divergence losses summed over all elements and batch
 @ignore_warnings
 def loss_function(recon_x, x, mu, logvar):
-    BCE = F.binary_cross_entropy(recon_x, x.view(-1, 784), reduction='sum')
+    #BCE = F.binary_cross_entropy(recon_x, x.view(-1, 32 * 32), reduction='sum')
+
+    MSE = nn.MSELoss()
+    BCE = MSE(recon_x.view(recon_x.size(0), -1), x.view(x.size(0), -1))
 
     # see Appendix B from VAE paper:
     # Kingma and Welling. Auto-Encoding Variational Bayes. ICLR, 2014
@@ -214,12 +217,24 @@ def run_denoiser():
     # get sample outputs
     output, _, _ = model.forward(noisy_imgs)
     # prep images for display
-    noisy_imgs = noisy_imgs.numpy()
+    raw_noisy_imgs = noisy_imgs.numpy()
+    noisy_imgs = []
+
+    for i in range(raw_noisy_imgs.shape[0]):
+        noisy_imgs.append(np.transpose(raw_noisy_imgs[i], (1, 2, 0)))
+
+    noisy_imgs = np.asarray(noisy_imgs)
 
     # output is resized into a batch of iages
-    output = output.view(batch_size, 1, 28, 28)
+    output = output.view(batch_size, 3, 32, 32)
     # use detach when it's an output that requires_grad
-    output = output.detach().numpy()
+    raw_output = output.detach().numpy()
+    output = []
+
+    for i in range(raw_output.shape[0]):
+        output.append(np.transpose(raw_output[i], (1, 2, 0)))
+    
+    output = np.asarray(output)
 
     # plot the first ten input images and then reconstructed images
     fig, axes = plt.subplots(nrows=2, ncols=10, sharex=True, sharey=True, figsize=(25,4))
@@ -227,7 +242,7 @@ def run_denoiser():
     # input images on top row, reconstructions on bottom
     for noisy_imgs, row in zip([noisy_imgs, output], axes):
         for img, ax in zip(noisy_imgs, row):
-            ax.imshow(np.squeeze(img), cmap='gray')
+            ax.imshow(np.squeeze(img))
             ax.get_xaxis().set_visible(False)
             ax.get_yaxis().set_visible(False)
 
