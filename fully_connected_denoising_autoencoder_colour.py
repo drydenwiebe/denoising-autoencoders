@@ -35,7 +35,7 @@ learning_rate = 1e-3
 # number of epochs to train the model
 n_epochs = 10
 # for adding noise to images
-noise_factor = 0.1
+noise_factor = 0
 # defines the size of the latent space
 latent_space = 64
 # weight decay for ADAM
@@ -183,7 +183,7 @@ def run_denoiser():
 
     # obtain one batch of test images
     dataiter = iter(test_loader)
-    images, labels = dataiter.next()
+    images, _ = dataiter.next()
 
     # add noise to the test images
     noisy_imgs = images + noise_factor * torch.randn(*images.shape)

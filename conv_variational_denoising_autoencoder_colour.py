@@ -39,11 +39,11 @@ batch_size = 500
 # if we use dropout or not
 dropout = False
 # define the learning rate
-learning_rate = 0.001
+learning_rate = 1e-3
 # number of epochs to train the model
-n_epochs = 2
+n_epochs = 10
 # for adding noise to images
-noise_factor=0.5
+noise_factor = 0.5
 # defines the size of the latent space
 latent_space_size = 32
 # weight decay for ADAM
@@ -145,10 +145,7 @@ class ConvolutionalDenoiser(nn.Module):
 # Reconstruction + KL divergence losses summed over all elements and batch
 @ignore_warnings
 def loss_function(recon_x, x, mu, logvar):
-    #BCE = F.binary_cross_entropy(recon_x, x.view(-1, 32 * 32), reduction='sum')
-
-    MSE = nn.MSELoss()
-    BCE = MSE(recon_x.view(recon_x.size(0), -1), x.view(x.size(0), -1))
+    BCE = F.binary_cross_entropy(recon_x, x.view(-1, 3072), reduction='sum')
 
     # see Appendix B from VAE paper:
     # Kingma and Welling. Auto-Encoding Variational Bayes. ICLR, 2014
@@ -217,26 +214,15 @@ def run_denoiser():
     # get sample outputs
     output, _, _ = model.forward(noisy_imgs)
     # prep images for display
-    raw_noisy_imgs = noisy_imgs.numpy()
-    noisy_imgs = []
-
-    for i in range(raw_noisy_imgs.shape[0]):
-        noisy_imgs.append(np.transpose(raw_noisy_imgs[i], (1, 2, 0)))
-
-    noisy_imgs = np.asarray(noisy_imgs)
+    noisy_imgs = noisy_imgs.numpy()
 
     # output is resized into a batch of iages
     output = output.view(batch_size, 3, 32, 32)
     # use detach when it's an output that requires_grad
-    raw_output = output.detach().numpy()
-    output = []
-
-    for i in range(raw_output.shape[0]):
-        output.append(np.transpose(raw_output[i], (1, 2, 0)))
-    
-    output = np.asarray(output)
+    output = output.detach().numpy()
 
     # plot the first ten input images and then reconstructed images
+    plt.clf()
     fig, axes = plt.subplots(nrows=2, ncols=10, sharex=True, sharey=True, figsize=(25,4))
 
     # input images on top row, reconstructions on bottom

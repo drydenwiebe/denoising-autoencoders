@@ -35,13 +35,13 @@ transform = transforms.ToTensor()
 # Create training and test dataloaders
 num_workers = 0
 # how many samples per batch to load
-batch_size = 20
+batch_size = 100
 # if we use dropout or not
 dropout = False
 # define the learning rate
 learning_rate = 0.001
 # number of epochs to train the model
-n_epochs = 1
+n_epochs = 10
 # for adding noise to images
 noise_factor=0.5
 # defines the size of the latent space
@@ -52,8 +52,8 @@ weight_decay=1e-5
 log_interval = 100
 
 # load the training and test datasets
-train_data = datasets.MNIST(root='data', train=True, download=True, transform=transform)
-test_data = datasets.MNIST(root='data', train=False, download=True, transform=transform)
+train_data = datasets.MNIST(root='../data', train=True, download=True, transform=transform)
+test_data = datasets.MNIST(root='../data', train=False, download=True, transform=transform)
 
 # prepare data loaders
 train_loader = torch.utils.data.DataLoader(train_data, batch_size=batch_size, num_workers=num_workers, shuffle=True)
@@ -110,7 +110,7 @@ class ConvolutionalDenoiser(nn.Module):
         # add third hidden layer
         x = F.relu(self.conv3(x))
         #x = self.pool(x)  # compressed representation
-        
+
         x = F.relu(self.conv_latent(x).view(-1, 49))
 
         return self.fc1_1(x), self.fc1_2(x)
