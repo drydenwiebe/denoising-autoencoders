@@ -88,10 +88,11 @@ class Denoiser(nn.Module):
         '''
 
         self.e_fc1 = nn.Linear(32 * 32 * 3, 2048)
-        self.e_fc2 = nn.Linear(2048, 512)
-        self.e_fc3 = nn.Linear(512, 256)
-        self.e_fc4 = nn.Linear(256, 128)
-        self.e_fc5 = nn.Linear(128, latent_space)
+        self.e_fc2 = nn.Linear(2048, 1024)
+        self.e_fc3 = nn.Linear(1024, 512)
+        self.e_fc4 = nn.Linear(512, 256)
+        self.e_fc5 = nn.Linear(256, 128)
+        self.e_fc6 = nn.Linear(128, latent_space)
 
         '''
         decoder
@@ -100,8 +101,9 @@ class Denoiser(nn.Module):
         self.d_fc1 = nn.Linear(latent_space, 128)
         self.d_fc2 = nn.Linear(128, 256)
         self.d_fc3 = nn.Linear(256, 512)
-        self.d_fc4 = nn.Linear(512, 2048)
-        self.d_fc5 = nn.Linear(2048, 32 * 32 * 3)
+        self.d_fc4 = nn.Linear(512, 1024)
+        self.d_fc5 = nn.Linear(1024, 2048)
+        self.d_fc6 = nn.Linear(2048, 32 * 32 * 3)
     
     @ignore_warnings
     def forward(self, x):
@@ -114,6 +116,7 @@ class Denoiser(nn.Module):
         x = F.relu(self.e_fc3(x))
         x = F.relu(self.e_fc4(x))
         x = F.relu(self.e_fc5(x))
+        x = F.relu(self.e_fc6(x))
         
         '''
         decode
@@ -122,7 +125,8 @@ class Denoiser(nn.Module):
         x = F.relu(self.d_fc2(x))
         x = F.relu(self.d_fc3(x))
         x = F.relu(self.d_fc4(x))
-        x = torch.sigmoid(self.d_fc5(x))
+        x = F.relu(self.d_fc5(x))
+        x = torch.sigmoid(self.d_fc6(x))
                 
         return x
     

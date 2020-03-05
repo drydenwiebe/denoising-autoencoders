@@ -41,7 +41,7 @@ dropout = False
 # define the learning rate
 learning_rate = 1e-3
 # number of epochs to train the model
-n_epochs = 10
+n_epochs = 1
 # for adding noise to images
 noise_factor = 0.5
 # defines the size of the latent space
