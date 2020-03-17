@@ -35,7 +35,7 @@ transform = transforms.ToTensor()
 # Create training and test dataloaders
 num_workers = 0
 # how many samples per batch to load
-batch_size = 100
+batch_size = 128
 # if we use dropout or not
 dropout = False
 # define the learning rate
@@ -43,11 +43,13 @@ learning_rate = 0.001
 # number of epochs to train the model
 n_epochs = 10
 # for adding noise to images
-noise_factor=0.5
+noise_factor = 0.5
 # defines the size of the latent space
-latent_space_size = 16
+latent_space_size = 40
+# determines the loss function used for the reconstruction loss
+loss_func = 'L1'
 # weight decay for ADAM
-weight_decay=1e-5
+weight_decay = 1e-5
 # interval for printing
 log_interval = 100
 
@@ -123,7 +125,7 @@ class ConvolutionalDenoiser(nn.Module):
     def decode(self, z):
 
         x = F.relu(self.fc2(z))
-        x = x.view(batch_size, 1, 7, 7)
+        x = x.view(x.shape[0], 1, 7, 7)
 
         '''
         decode
@@ -145,7 +147,18 @@ class ConvolutionalDenoiser(nn.Module):
 # Reconstruction + KL divergence losses summed over all elements and batch
 @ignore_warnings
 def loss_function(recon_x, x, mu, logvar):
-    BCE = F.binary_cross_entropy(recon_x, x.view(-1, 784), reduction='sum')
+
+    if(loss_func == 'BCE'):
+        reconstruction_loss = F.binary_cross_entropy(recon_x.view(-1, 784), x.view(-1, 784), reduction='sum')
+    elif(loss_func == 'MSE'):
+        loss = nn.MSELoss()
+        reconstruction_loss = loss(recon_x.view(-1, 784), x.view(-1, 784))
+    elif(loss_func == 'L1'):
+        loss = nn.L1Loss(reduction='sum')
+        reconstruction_loss = loss(recon_x.view(-1, 784), x.view(-1, 784))
+    else:
+        reconstruction_loss = None
+        raise ValueError('Invalid loss function')
 
     # see Appendix B from VAE paper:
     # Kingma and Welling. Auto-Encoding Variational Bayes. ICLR, 2014
@@ -153,7 +166,7 @@ def loss_function(recon_x, x, mu, logvar):
     # 0.5 * sum(1 + log(sigma^2) - mu^2 - sigma^2)
     KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
 
-    return BCE + KLD
+    return reconstruction_loss + KLD
 
 def run_denoiser():
     # initalize the neural network
@@ -196,12 +209,15 @@ def run_denoiser():
 
             if batch_idx % log_interval == 0:
                 print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-                    epoch, batch_idx * len(data), len(train_loader.dataset),
-                    100. * batch_idx / len(train_loader),
-                    loss.item() / len(data)))
+                    epoch,
+                    batch_idx * batch_size,
+                    len(train_loader.dataset),
+                    batch_idx * batch_size / len(train_loader.dataset),
+                    loss.item() / batch_size))
 
         print('====> Epoch: {} Average loss: {:.4f}'.format(
-            epoch, 10 * train_loss / len(train_loader.dataset)))
+            epoch,
+            train_loss / len(train_loader)))
 
     # obtain one batch of test images
     dataiter = iter(test_loader)
@@ -232,6 +248,8 @@ def run_denoiser():
             ax.get_yaxis().set_visible(False)
 
     plt.show()
+
+    # here we make generativd samples
 
 if __name__ == "__main__":
     run_denoiser()
