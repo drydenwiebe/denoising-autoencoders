@@ -27,13 +27,13 @@ transform = transforms.ToTensor()
 # Create training and test dataloaders
 num_workers = 0
 # how many samples per batch to load
-batch_size = 20
+batch_size = 128
 # if we use dropout or not
 dropout = False
 # define the learning rate
 learning_rate = 1e-3
 # number of epochs to train the model
-n_epochs = 10
+n_epochs = 1
 # for adding noise to images
 noise_factor = 0.5
 # defines the size of the latent space
@@ -110,6 +110,8 @@ class Denoiser(nn.Module):
         x = F.relu(self.e_fc2(x))
         x = F.relu(self.e_fc3(x))
         x = F.relu(self.e_fc4(x))
+
+        z = x
         
         '''
         decode
@@ -119,16 +121,23 @@ class Denoiser(nn.Module):
         x = F.relu(self.d_fc3(x))
         x = torch.sigmoid(self.d_fc4(x))
                 
-        return x
-    
+        return x, z
+
+# we have to add a custom loss function as a regularizing term
+def loss_function(recon_x, x, z):
+    # specify loss function
+    criterion = nn.MSELoss()
+    reconstuction_loss = criterion(recon_x, x.view(x.size(0), -1))
+
+    regularizer = (torch.sum(z.pow(2))).pow(1/2)
+
+    return reconstuction_loss + regularizer
+
 @ignore_warnings
 def run_denoiser():
     # initalize the neural network
     model = Denoiser()
     print(model)
-
-    # specify loss function
-    criterion = nn.MSELoss()
 
     # specify loss function
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
@@ -161,10 +170,10 @@ def run_denoiser():
             '''
             # reshape the input 
             noisy_imgs = noisy_imgs.view(noisy_imgs.size(0), -1)
-            outputs = model(noisy_imgs)
+            outputs, z = model(noisy_imgs)
             # calculate the loss
             # the "target" is still the original, not-noisy images
-            loss = criterion(outputs, images.view(images.size(0), -1))
+            loss = loss_function(outputs, images.view(images.size(0), -1), z)
 
             # backward pass: compute gradient of the loss with respect to model parameters
             loss.backward()
@@ -189,7 +198,7 @@ def run_denoiser():
     noisy_imgs = np.clip(noisy_imgs, 0., 1.)
 
     # get sample outputs
-    output = model(noisy_imgs.view(noisy_imgs.size(0), -1))
+    output, z = model(noisy_imgs.view(noisy_imgs.size(0), -1))
     # prep images for display
     noisy_imgs = noisy_imgs.numpy()
 

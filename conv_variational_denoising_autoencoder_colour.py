@@ -35,25 +35,27 @@ transform = transforms.ToTensor()
 # Create training and test dataloaders
 num_workers = 0
 # how many samples per batch to load
-batch_size = 500
+batch_size = 128
 # if we use dropout or not
 dropout = False
 # define the learning rate
-learning_rate = 1e-3
+learning_rate = 0.01
 # number of epochs to train the model
-n_epochs = 1
+n_epochs = 5
 # for adding noise to images
-noise_factor = 0.5
+noise_factor = 0
 # defines the size of the latent space
-latent_space_size = 32
+latent_space_size = 64
+# determines the loss function used for the reconstruction loss
+loss_func = 'BCE'
 # weight decay for ADAM
-weight_decay=1e-5
+weight_decay = 1e-5
 # interval for printing
 log_interval = 100
 
 # load the training and test datasets
-train_data = datasets.SVHN(root='data_colour', split='train', download=True, transform=transform)
-test_data = datasets.SVHN(root='data_colour', split='test', download=True, transform=transform)
+train_data = datasets.CIFAR10(root='../data', train=True, download=True, transform=transform)
+test_data = datasets.CIFAR10(root='../data', train=False, download=True, transform=transform)
 
 # prepare data loaders
 train_loader = torch.utils.data.DataLoader(train_data, batch_size=batch_size, num_workers=num_workers, shuffle=True)
@@ -68,11 +70,15 @@ class ConvolutionalDenoiser(nn.Module):
         encoder
         '''
         # conv layer (depth from 1 --> 32), 3x3 kernels
-        self.conv1 = nn.Conv2d(3, 32, 3, padding=1)  
+        self.conv1 = nn.Conv2d(3, 64, 3, padding=1)
+        # batch norm for the first conv layer
+        self.bn1 = nn.BatchNorm2d(64)
+        # conv layer (depth from 64 --> 32) 3x3 kernels
+        self.conv2 = nn.Conv2d(64, 32, 3, padding=1)
         # conv layer (depth from 32 --> 16), 3x3 kernels
-        self.conv2 = nn.Conv2d(32, 16, 3, padding=1)
+        self.conv3 = nn.Conv2d(32, 16, 3, padding=1)
         # conv layer (depth from 16 --> 8), 3x3 kernels
-        self.conv3 = nn.Conv2d(16, 8, 3, padding=1)
+        self.conv4 = nn.Conv2d(16, 8, 3, padding=1)
         # pooling layer to reduce x-y dims by two; kernel and stride of 2
         self.pool = nn.MaxPool2d(2, 2)
 
@@ -89,12 +95,13 @@ class ConvolutionalDenoiser(nn.Module):
         # layer from the decoder that takes the latent space 
         self.fc2 = nn.Linear(latent_space_size, 64)
         # transpose layer, a kernel of 2 and a stride of 2 will increase the spatial dims by 2
-        self.t_conv1 = nn.ConvTranspose2d(1, 8, 3, padding=1)  # kernel_size=3 to get to a 7x7 image output
+        self.t_conv1 = nn.ConvTranspose2d(1, 8, 2, padding=1)  # kernel_size=3 to get to a 7x7 image output
         # two more transpose layers with a kernel of 2
-        self.t_conv2 = nn.ConvTranspose2d(8, 16, 2, stride=2)
+        self.t_conv2 = nn.ConvTranspose2d(8, 16, 2, stride=1)
         self.t_conv3 = nn.ConvTranspose2d(16, 32, 2, stride=2)
+        self.t_conv4 = nn.ConvTranspose2d(32, 64, 2, stride=2)
         # one, final, normal conv layer to decrease the depth
-        self.conv_out = nn.Conv2d(32, 3, 3, padding=1)
+        self.conv_out = nn.Conv2d(64, 3, 3, padding=1)
 
     def encode(self, x):
         '''
@@ -103,15 +110,18 @@ class ConvolutionalDenoiser(nn.Module):
         # add hidden layers with relu activation function
         # and maxpooling after
         x = F.relu(self.conv1(x))
-        x = self.pool(x)
-        # add second hidden layer
+        x = self.bn1(x)
         x = F.relu(self.conv2(x))
         x = self.pool(x)
-        # add third hidden layer
+        # add second hidden layer
         x = F.relu(self.conv3(x))
-        #x = self.pool(x)  # compressed representation
+        x = self.pool(x)
+        # add third hidden layer
+        x = F.relu(self.conv4(x))
 
-        x = F.relu(self.conv_latent(x).view(-1, 64))
+        x = self.conv_latent(x)
+
+        x = F.relu(x.view(-1, 64))
 
         return self.fc1_1(x), self.fc1_2(x)
 
@@ -132,6 +142,7 @@ class ConvolutionalDenoiser(nn.Module):
         x = F.relu(self.t_conv1(x))
         x = F.relu(self.t_conv2(x))
         x = F.relu(self.t_conv3(x))
+        x = F.relu(self.t_conv4(x))
         # transpose again, output should have a sigmoid applied
         x = torch.sigmoid(self.conv_out(x))
 
@@ -145,7 +156,18 @@ class ConvolutionalDenoiser(nn.Module):
 # Reconstruction + KL divergence losses summed over all elements and batch
 @ignore_warnings
 def loss_function(recon_x, x, mu, logvar):
-    BCE = F.binary_cross_entropy(recon_x, x.view(-1, 3072), reduction='sum')
+
+    if(loss_func == 'BCE'):
+        reconstruction_loss = F.binary_cross_entropy(recon_x.view(-1, 3072), x.view(-1, 3072), reduction='sum')
+    elif(loss_func == 'MSE'):
+        loss = nn.MSELoss()
+        reconstruction_loss = loss(recon_x.view(-1, 3072), x.view(-1, 3072))
+    elif(loss_func == 'L1'):
+        loss = nn.L1Loss(reduction='sum')
+        reconstruction_loss = loss(recon_x.view(-1, 3072), x.view(-1, 3072))
+    else:
+        reconstruction_loss = None
+        raise ValueError('Invalid loss function')
 
     # see Appendix B from VAE paper:
     # Kingma and Welling. Auto-Encoding Variational Bayes. ICLR, 2014
@@ -153,7 +175,7 @@ def loss_function(recon_x, x, mu, logvar):
     # 0.5 * sum(1 + log(sigma^2) - mu^2 - sigma^2)
     KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
 
-    return BCE + KLD
+    return reconstruction_loss + KLD
 
 def run_denoiser():
     # initalize the neural network
@@ -196,12 +218,15 @@ def run_denoiser():
 
             if batch_idx % log_interval == 0:
                 print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-                    epoch, batch_idx * len(data), len(train_loader.dataset),
-                    100. * batch_idx / len(train_loader),
-                    loss.item() / len(data)))
+                    epoch,
+                    batch_idx * batch_size,
+                    len(train_loader.dataset),
+                    batch_idx * batch_size / len(train_loader.dataset),
+                    loss.item() / batch_size))
 
         print('====> Epoch: {} Average loss: {:.4f}'.format(
-            epoch, 10 * train_loss / len(train_loader.dataset)))
+            epoch,
+            train_loss / len(train_loader.dataset)))
 
     # obtain one batch of test images
     dataiter = iter(test_loader)
@@ -222,17 +247,19 @@ def run_denoiser():
     output = output.detach().numpy()
 
     # plot the first ten input images and then reconstructed images
-    plt.clf()
-    fig, axes = plt.subplots(nrows=2, ncols=10, sharex=True, sharey=True, figsize=(25,4))
+    fig, axes = plt.subplots(nrows=2, ncols=10, sharex=True, sharey=True, figsize=(30,30))
 
     # input images on top row, reconstructions on bottom
     for noisy_imgs, row in zip([noisy_imgs, output], axes):
         for img, ax in zip(noisy_imgs, row):
+            img = np.transpose(img, (1, 2, 0))
             ax.imshow(np.squeeze(img))
             ax.get_xaxis().set_visible(False)
             ax.get_yaxis().set_visible(False)
 
     plt.show()
+
+    # here we make generativd samples
 
 if __name__ == "__main__":
     run_denoiser()

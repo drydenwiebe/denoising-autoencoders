@@ -39,15 +39,15 @@ batch_size = 128
 # if we use dropout or not
 dropout = False
 # define the learning rate
-learning_rate = 0.001
+learning_rate = 0.0001
 # number of epochs to train the model
-n_epochs = 10
+n_epochs = 20
 # for adding noise to images
 noise_factor = 0.5
 # defines the size of the latent space
 latent_space_size = 40
 # determines the loss function used for the reconstruction loss
-loss_func = 'L1'
+loss_func = 'BCE'
 # weight decay for ADAM
 weight_decay = 1e-5
 # interval for printing

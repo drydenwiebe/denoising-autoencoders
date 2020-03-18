@@ -27,7 +27,7 @@ transform = transforms.ToTensor()
 # Create training and test dataloaders
 num_workers = 0
 # how many samples per batch to load
-batch_size = 100
+batch_size = 20
 # if we use dropout or not
 dropout = False
 # define the learning rate
@@ -35,22 +35,21 @@ learning_rate = 1e-3
 # number of epochs to train the model
 n_epochs = 10
 # for adding noise to images
-noise_factor = 0
+noise_factor = 0.5
 # defines the size of the latent space
-latent_space = 64
+latent_space = 8
 # weight decay for ADAM
 weight_decay=1e-5
 
-# SVHN dataset 
-train_dataset = torchvision.datasets.SVHN(root='../../data_colour', 
-                                           split='train', 
+# MNIST dataset 
+train_dataset = torchvision.datasets.MNIST(root='../../data', 
+                                           train=True, 
                                            transform=transforms.ToTensor(),  
                                            download=True)
 
-test_dataset = torchvision.datasets.SVHN(root='../../data_colour', 
-                                          split='test', 
-                                          transform=transforms.ToTensor(),
-                                          download=True)
+test_dataset = torchvision.datasets.MNIST(root='../../data', 
+                                          train=False, 
+                                          transform=transforms.ToTensor())
 
 # Data loader
 train_loader = torch.utils.data.DataLoader(dataset=train_dataset, 
@@ -87,12 +86,10 @@ class Denoiser(nn.Module):
         encoder
         '''
 
-        self.e_fc1 = nn.Linear(32 * 32 * 3, 2048)
-        self.e_fc2 = nn.Linear(2048, 1024)
-        self.e_fc3 = nn.Linear(1024, 512)
-        self.e_fc4 = nn.Linear(512, 256)
-        self.e_fc5 = nn.Linear(256, 128)
-        self.e_fc6 = nn.Linear(128, latent_space)
+        self.e_fc1 = nn.Linear(28 * 28, 512)
+        self.e_fc2 = nn.Linear(512, 256)
+        self.e_fc3 = nn.Linear(256, 128)
+        self.e_fc4 = nn.Linear(128, latent_space)
 
         '''
         decoder
@@ -101,9 +98,7 @@ class Denoiser(nn.Module):
         self.d_fc1 = nn.Linear(latent_space, 128)
         self.d_fc2 = nn.Linear(128, 256)
         self.d_fc3 = nn.Linear(256, 512)
-        self.d_fc4 = nn.Linear(512, 1024)
-        self.d_fc5 = nn.Linear(1024, 2048)
-        self.d_fc6 = nn.Linear(2048, 32 * 32 * 3)
+        self.d_fc4 = nn.Linear(512, 28 * 28)
     
     @ignore_warnings
     def forward(self, x):
@@ -115,8 +110,6 @@ class Denoiser(nn.Module):
         x = F.relu(self.e_fc2(x))
         x = F.relu(self.e_fc3(x))
         x = F.relu(self.e_fc4(x))
-        x = F.relu(self.e_fc5(x))
-        x = F.relu(self.e_fc6(x))
         
         '''
         decode
@@ -124,9 +117,7 @@ class Denoiser(nn.Module):
         x = F.relu(self.d_fc1(x))
         x = F.relu(self.d_fc2(x))
         x = F.relu(self.d_fc3(x))
-        x = F.relu(self.d_fc4(x))
-        x = F.relu(self.d_fc5(x))
-        x = torch.sigmoid(self.d_fc6(x))
+        x = torch.sigmoid(self.d_fc4(x))
                 
         return x
     
@@ -191,7 +182,7 @@ def run_denoiser():
 
     # obtain one batch of test images
     dataiter = iter(test_loader)
-    images, _ = dataiter.next()
+    images, labels = dataiter.next()
 
     # add noise to the test images
     noisy_imgs = images + noise_factor * torch.randn(*images.shape)
@@ -200,24 +191,12 @@ def run_denoiser():
     # get sample outputs
     output = model(noisy_imgs.view(noisy_imgs.size(0), -1))
     # prep images for display
-    raw_noisy_imgs = noisy_imgs.numpy()
-    noisy_imgs = []
-
-    for i in range(raw_noisy_imgs.shape[0]):
-        noisy_imgs.append(np.transpose(raw_noisy_imgs[i], (1, 2, 0)))
-
-    noisy_imgs = np.asarray(noisy_imgs)
+    noisy_imgs = noisy_imgs.numpy()
 
     # output is resized into a batch of images
-    output = output.view(batch_size, 3, 32, 32)
+    output = output.view(batch_size, 1, 28, 28)
     # use detach when it's an output that requires_grad
-    raw_output = output.detach().numpy()
-    output = []
-
-    for i in range(raw_output.shape[0]):
-        output.append(np.transpose(raw_output[i], (1, 2, 0)))
-    
-    output = np.asarray(output)
+    output = output.detach().numpy()
 
     # plot the first ten input images and then reconstructed images
     fig, axes = plt.subplots(nrows=2, ncols=10, sharex=True, sharey=True, figsize=(25,4))
@@ -225,7 +204,7 @@ def run_denoiser():
     # input images on top row, reconstructions on bottom
     for noisy_imgs, row in zip([noisy_imgs, output], axes):
         for img, ax in zip(noisy_imgs, row):
-            ax.imshow(np.squeeze(img))
+            ax.imshow(np.squeeze(img), cmap='gray')
             ax.get_xaxis().set_visible(False)
             ax.get_yaxis().set_visible(False)
 
