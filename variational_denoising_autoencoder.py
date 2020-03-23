@@ -49,13 +49,13 @@ transform = transforms.ToTensor()
 # Create training and test dataloaders
 num_workers = 0
 # how many samples per batch to load
-batch_size = 20
+batch_size = 128
 # if we use dropout or not
 dropout = False
 # define the learning rate
-learning_rate = 1e-3
+learning_rate = 1e-4
 # number of epochs to train the model
-n_epochs = 50
+n_epochs = 100
 # for adding noise to images
 noise_factor = 0.5
 # defines the size of the latent space
@@ -74,20 +74,22 @@ test_loader = torch.utils.data.DataLoader(
     datasets.MNIST('../data', train=False, transform=transforms.ToTensor()),
     batch_size=batch_size, shuffle=True, **kwargs)
 
-
 class VAE(nn.Module):
     def __init__(self):
         super(VAE, self).__init__()
 
-        self.fc1 = nn.Linear(784, 400)
-        self.fc21 = nn.Linear(400, 20)
-        self.fc22 = nn.Linear(400, 20)
-        self.fc3 = nn.Linear(20, 400)
-        self.fc4 = nn.Linear(400, 784)
+        self.fc1 = nn.Linear(784, 256)
+        self.fc2 = nn.Linear(256, 128)
+        self.fc31 = nn.Linear(128, 20)
+        self.fc32 = nn.Linear(128, 20)
+        self.fc4 = nn.Linear(20, 128)
+        self.fc5 = nn.Linear(128, 256)
+        self.fc6 = nn.Linear(256, 784)
 
     def encode(self, x):
         h1 = F.relu(self.fc1(x))
-        return self.fc21(h1), self.fc22(h1)
+        h2 = F.relu(self.fc2(h1))
+        return self.fc31(h2), self.fc32(h2)
 
     def reparameterize(self, mu, logvar):
         std = torch.exp(0.5*logvar)
@@ -95,8 +97,9 @@ class VAE(nn.Module):
         return mu + eps*std
 
     def decode(self, z):
-        h3 = F.relu(self.fc3(z))
-        return torch.sigmoid(self.fc4(h3))
+        h3 = F.relu(self.fc4(z))
+        h4 = F.relu(self.fc5(h3))
+        return torch.sigmoid(self.fc6(h4))
 
     def forward(self, x):
         mu, logvar = self.encode(x.view(-1, 784))
@@ -120,7 +123,6 @@ def loss_function(recon_x, x, mu, logvar):
     KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
 
     return BCE + KLD
-
 
 @ignore_warnings
 def train(epoch):

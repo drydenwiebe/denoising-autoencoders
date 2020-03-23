@@ -39,9 +39,9 @@ batch_size = 128
 # if we use dropout or not
 dropout = False
 # define the learning rate
-learning_rate = 0.0001
+learning_rate = 0.000001
 # number of epochs to train the model
-n_epochs = 20
+n_epochs = 400
 # for adding noise to images
 noise_factor = 0.5
 # defines the size of the latent space
@@ -179,6 +179,7 @@ def run_denoiser():
     for epoch in range(1, n_epochs+1):
         # monitor training loss
         train_loss = 0.0
+        train_image_count = 0
 
         ###################
         # train the model #
@@ -206,6 +207,7 @@ def run_denoiser():
             optimizer.step()
             # update running training loss
             train_loss += loss.item()
+            train_image_count += images.shape[0]
 
             if batch_idx % log_interval == 0:
                 print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
@@ -217,7 +219,70 @@ def run_denoiser():
 
         print('====> Epoch: {} Average loss: {:.4f}'.format(
             epoch,
-            train_loss / len(train_loader)))
+            train_loss / train_image_count))
+    
+    model.eval()
+    
+    test_loss = 0.0
+    test_image_count = 0
+
+    for test_batch, data in enumerate(test_loader):
+        images, _ = data
+        
+        ## add random noise to the input images
+        noisy_imgs = images + noise_factor * torch.randn(*images.shape)
+        # Clip the images to be between 0 and 1
+        noisy_imgs = np.clip(noisy_imgs, 0., 1.)
+
+        ## forward pass: compute predicted outputs by passing *noisy* images to the model
+        outputs, mu, logvar = model.forward(noisy_imgs)
+        # calculate the loss
+        # the "target" is still the original, not-noisy images
+        loss = loss_function(outputs, images, mu, logvar)
+
+        test_loss += loss.item()
+        test_image_count += images.shape[0]
+
+        print('Test Batch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+            test_batch,
+            test_batch * batch_size,
+            len(test_loader.dataset),
+            test_batch * batch_size / len(test_loader.dataset),
+            loss.item() / batch_size))
+
+    print('Test loss: {:.4f}'.format(
+        test_loss / test_image_count))
+
+    # obtain one batch of test images
+    dataiter = iter(test_loader)
+    images, labels = dataiter.next()
+
+    # add noise to the test images
+    noisy_imgs = images + noise_factor * torch.randn(*images.shape)
+    noisy_imgs = np.clip(noisy_imgs, 0., 1.)
+
+    # get sample outputs
+    output, _, _ = model.forward(noisy_imgs)
+    # prep images for display
+    noisy_imgs = noisy_imgs.numpy()
+
+    # output is resized into a batch of iages
+    output = output.view(batch_size, 1, 28, 28)
+    # use detach when it's an output that requires_grad
+    output = output.detach().numpy()
+
+    # plot the first ten input images and then reconstructed images
+    fig, axes = plt.subplots(nrows=2, ncols=10, sharex=True, sharey=True, figsize=(25,4))
+
+    # input images on top row, reconstructions on bottom
+    for noisy_imgs, row in zip([noisy_imgs, output], axes):
+        for img, ax in zip(noisy_imgs, row):
+            ax.imshow(np.squeeze(img), cmap='gray')
+            ax.get_xaxis().set_visible(False)
+            ax.get_yaxis().set_visible(False)
+
+    plt.show()
+    plt.clf()
 
     # obtain one batch of test images
     dataiter = iter(test_loader)
@@ -249,7 +314,7 @@ def run_denoiser():
 
     plt.show()
 
-    # here we make generativd samples
+    # here we make the generated samples
 
 if __name__ == "__main__":
     run_denoiser()
