@@ -1,0 +1,69 @@
+Train Epoch: 200 [0/60000 (0%)]	Loss: 132.184662
+Train Epoch: 200 [1280/60000 (2%)]	Loss: 130.917816
+Train Epoch: 200 [2560/60000 (4%)]	Loss: 134.391541
+Train Epoch: 200 [3840/60000 (6%)]	Loss: 133.953552
+Train Epoch: 200 [5120/60000 (9%)]	Loss: 137.430222
+Train Epoch: 200 [6400/60000 (11%)]	Loss: 129.803360
+Train Epoch: 200 [7680/60000 (13%)]	Loss: 133.442764
+Train Epoch: 200 [8960/60000 (15%)]	Loss: 140.264938
+Train Epoch: 200 [10240/60000 (17%)]	Loss: 139.174606
+Train Epoch: 200 [11520/60000 (19%)]	Loss: 133.098434
+Train Epoch: 200 [12800/60000 (21%)]	Loss: 130.437653
+Train Epoch: 200 [14080/60000 (23%)]	Loss: 128.923859
+Train Epoch: 200 [15360/60000 (26%)]	Loss: 135.266785
+Train Epoch: 200 [16640/60000 (28%)]	Loss: 131.395859
+Train Epoch: 200 [17920/60000 (30%)]	Loss: 133.535889
+Train Epoch: 200 [19200/60000 (32%)]	Loss: 135.227570
+Train Epoch: 200 [20480/60000 (34%)]	Loss: 136.519958
+Train Epoch: 200 [21760/60000 (36%)]	Loss: 140.970459
+Train Epoch: 200 [23040/60000 (38%)]	Loss: 132.055145
+Train Epoch: 200 [24320/60000 (41%)]	Loss: 134.679932
+Train Epoch: 200 [25600/60000 (43%)]	Loss: 132.152786
+Train Epoch: 200 [26880/60000 (45%)]	Loss: 139.190521
+Train Epoch: 200 [28160/60000 (47%)]	Loss: 131.897293
+Train Epoch: 200 [29440/60000 (49%)]	Loss: 134.008377
+Train Epoch: 200 [30720/60000 (51%)]	Loss: 136.553665
+Train Epoch: 200 [32000/60000 (53%)]	Loss: 132.552826
+Train Epoch: 200 [33280/60000 (55%)]	Loss: 130.533722
+Train Epoch: 200 [34560/60000 (58%)]	Loss: 130.558640
+Train Epoch: 200 [35840/60000 (60%)]	Loss: 136.704117
+Train Epoch: 200 [37120/60000 (62%)]	Loss: 133.208588
+Train Epoch: 200 [38400/60000 (64%)]	Loss: 139.835358
+Train Epoch: 200 [39680/60000 (66%)]	Loss: 135.001785
+Train Epoch: 200 [40960/60000 (68%)]	Loss: 130.229126
+Train Epoch: 200 [42240/60000 (70%)]	Loss: 134.159439
+Train Epoch: 200 [43520/60000 (72%)]	Loss: 127.698044
+Train Epoch: 200 [44800/60000 (75%)]	Loss: 142.634918
+Train Epoch: 200 [46080/60000 (77%)]	Loss: 136.426041
+Train Epoch: 200 [47360/60000 (79%)]	Loss: 135.146133
+Train Epoch: 200 [48640/60000 (81%)]	Loss: 137.795410
+Train Epoch: 200 [49920/60000 (83%)]	Loss: 139.941284
+Train Epoch: 200 [51200/60000 (85%)]	Loss: 134.508102
+Train Epoch: 200 [52480/60000 (87%)]	Loss: 131.128479
+Train Epoch: 200 [53760/60000 (90%)]	Loss: 139.287827
+Train Epoch: 200 [55040/60000 (92%)]	Loss: 136.064728
+Train Epoch: 200 [56320/60000 (94%)]	Loss: 138.494980
+Train Epoch: 200 [57600/60000 (96%)]	Loss: 133.649323
+Train Epoch: 200 [58880/60000 (98%)]	Loss: 131.325195
+====> Epoch: 200 Average loss: 134.7283
+====> Test set loss: 133.5631
+
+
+# Create training and test dataloaders
+num_workers = 0
+# how many samples per batch to load
+batch_size = 128
+# if we use dropout or not
+dropout = False
+# define the learning rate
+learning_rate = 1e-4
+# number of epochs to train the model
+n_epochs = 200
+# for adding noise to images
+noise_factor = 0.5
+# defines the size of the latent space
+latent_space = 8
+# weight decay for ADAM
+weight_decay=1e-5
+# set the seed for PyTorch
+torch.manual_seed(args.seed)

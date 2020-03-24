@@ -53,7 +53,7 @@ batch_size = 128
 # if we use dropout or not
 dropout = False
 # define the learning rate
-learning_rate = 1e-4
+learning_rate = 1e-5
 # number of epochs to train the model
 n_epochs = 200
 # for adding noise to images
@@ -104,16 +104,16 @@ class VAE(nn.Module):
     def forward(self, x):
         mu, logvar = self.encode(x.view(-1, 784))
         z = self.reparameterize(mu, logvar)
-        return self.decode(z), mu, logvar
+        return self.decode(z), mu, logvar, z
 
 
 model = VAE().to(device)
 print(model)
 
-optimizer = optim.Adam(model.parameters(), lr=1e-3)
+optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
 # Reconstruction + KL divergence losses summed over all elements and batch
-def loss_function(recon_x, x, mu, logvar):
+def loss_function(recon_x, x, mu, logvar, z):
     BCE = F.binary_cross_entropy(recon_x, x.view(-1, 784), reduction='sum')
 
     # see Appendix B from VAE paper:
@@ -121,6 +121,8 @@ def loss_function(recon_x, x, mu, logvar):
     # https://arxiv.org/abs/1312.6114
     # 0.5 * sum(1 + log(sigma^2) - mu^2 - sigma^2)
     KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
+
+    #regularization = torch.sum(torch.abs(z))
 
     return BCE + KLD
 
@@ -138,9 +140,9 @@ def train(epoch):
 
         optimizer.zero_grad()
 
-        outputs, mu, logvar = model.forward(noisy_images)
+        outputs, mu, logvar, z = model.forward(noisy_images)
 
-        loss = loss_function(outputs, data, mu, logvar)
+        loss = loss_function(outputs, data, mu, logvar, z)
 
         loss.backward()
 
@@ -170,9 +172,9 @@ def test(epoch):
             noisy_images = data + noise_factor * torch.randn(*data.shape)
             noisy_images = np.clip(noisy_images, 0., 1.)
 
-            outputs, mu, logvar = model(noisy_images)
+            outputs, mu, logvar, z = model(noisy_images)
 
-            test_loss += loss_function(outputs, data, mu, logvar).item()
+            test_loss += loss_function(outputs, data, mu, logvar, z).item()
 
             if i == 0:
                 n = min(data.size(0), 8)
