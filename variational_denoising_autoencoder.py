@@ -170,7 +170,7 @@ def test(epoch):
     with torch.no_grad():
         for i, (data, _) in enumerate(test_loader):
             # add noise to the test images
-            noisy_images = data + (noise_factor * torch.randn(*data.shape)).to(device)
+            noisy_images = data + noise_factor * torch.randn(*data.shape)
             noisy_images = np.clip(noisy_images, 0., 1.)
             noisy_images.to(device)
 
