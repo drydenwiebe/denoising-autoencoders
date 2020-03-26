@@ -144,6 +144,8 @@ def train(epoch):
 
         optimizer.zero_grad()
 
+        print(noisy_images.device)
+
         outputs, mu, logvar, z = model.forward(noisy_images)
 
         loss = loss_function(outputs, data, mu, logvar, z)
