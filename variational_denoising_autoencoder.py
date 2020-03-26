@@ -137,9 +137,8 @@ def train(epoch):
         data = data.to(device)
 
         # add noise to the test images
-        noisy_images = data + noise_factor * torch.randn(*data.shape)
+        noisy_images = data + (noise_factor * torch.randn(*data.shape)).to(device)
         noisy_images = np.clip(noisy_images, 0., 1.)
-        noisy_images.to(device)
 
         optimizer.zero_grad()
 
@@ -171,10 +170,9 @@ def test(epoch):
             data = data.to(device)
 
             # add noise to the test images
-            noisy_images = data + noise_factor * torch.randn(*data.shape)
+            noisy_images = data + (noise_factor * torch.randn(*data.shape)).to(device)
             noisy_images = np.clip(noisy_images, 0., 1.)
             outputs, mu, logvar, z = model(noisy_images)
-            noisy_images.to(device)
 
             test_loss += loss_function(outputs, data, mu, logvar, z).item()
 
