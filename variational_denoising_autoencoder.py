@@ -32,7 +32,7 @@ def ignore_warnings(f):
     return inner
 
 parser = argparse.ArgumentParser(description='VAE MNIST Example')
-parser.add_argument('--no-cuda', action='store_true', default=False,
+parser.add_argument('--no-cuda', action='store_true', default=True,
                     help='enables CUDA training')
 parser.add_argument('--seed', type=int, default=1, metavar='S',
                     help='random seed (default: 1)')
