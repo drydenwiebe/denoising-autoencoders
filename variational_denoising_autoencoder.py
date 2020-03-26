@@ -108,9 +108,9 @@ class VAE(nn.Module):
 
 
 model = VAE().to(device)
-print(model + '\n')
+print(str(model) + '\n')
 
-print("Running on: " + device + '\n')
+print("Running on: " + str(device) + '\n')
 
 optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
