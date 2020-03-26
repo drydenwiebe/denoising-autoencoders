@@ -134,11 +134,13 @@ def train(epoch):
     train_loss = 0
 
     for batch_idx, (data, _) in enumerate(train_loader):
-        data = data.to(device)
-
         # add noise to the test images
-        noisy_images = data + (noise_factor * torch.randn(*data.shape)).to(device)
+        noisy_images = data.cp + noise_factor * torch.randn(*data.shape)
         noisy_images = np.clip(noisy_images, 0., 1.)
+        noisy_images.to(device)
+
+        # transfer the training data to the correct device
+        data.to(device)
 
         optimizer.zero_grad()
 
@@ -167,11 +169,14 @@ def test(epoch):
     test_loss = 0
     with torch.no_grad():
         for i, (data, _) in enumerate(test_loader):
-            data = data.to(device)
-
             # add noise to the test images
-            noisy_images = data + (noise_factor * torch.randn(*data.shape)).to(device)
+            noisy_images = data.cpu() + (noise_factor * torch.randn(*data.shape)).to(device)
             noisy_images = np.clip(noisy_images, 0., 1.)
+            noisy_images.to(device)
+
+            # transfer the training data to the correct device
+            data.to(device)
+
             outputs, mu, logvar, z = model(noisy_images)
 
             test_loss += loss_function(outputs, data, mu, logvar, z).item()
