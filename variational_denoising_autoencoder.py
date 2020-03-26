@@ -55,7 +55,7 @@ dropout = False
 # define the learning rate
 learning_rate = 1e-5
 # number of epochs to train the model
-n_epochs = 200
+n_epochs = 500
 # for adding noise to images
 noise_factor = 0.5
 # defines the size of the latent space
@@ -80,9 +80,9 @@ class VAE(nn.Module):
 
         self.fc1 = nn.Linear(784, 256)
         self.fc2 = nn.Linear(256, 128)
-        self.fc31 = nn.Linear(128, 20)
-        self.fc32 = nn.Linear(128, 20)
-        self.fc4 = nn.Linear(20, 128)
+        self.fc31 = nn.Linear(128, latent_space)
+        self.fc32 = nn.Linear(128, latent_space)
+        self.fc4 = nn.Linear(latent_space, 128)
         self.fc5 = nn.Linear(128, 256)
         self.fc6 = nn.Linear(256, 784)
 
@@ -176,7 +176,7 @@ def test(epoch):
 
             test_loss += loss_function(outputs, data, mu, logvar, z).item()
 
-            if i == 0:
+            if i == 0 and epoch % 100 == 0:
                 n = min(data.size(0), 8)
                 comparison = torch.cat([noisy_images[:n],
                                       outputs.view(batch_size, 1, 28, 28)[:n]])
@@ -190,8 +190,10 @@ if __name__ == "__main__":
     for epoch in range(1, n_epochs + 1):
         train(epoch)
         test(epoch)
-        with torch.no_grad():
-            sample = torch.randn(64, 20).to(device)
-            sample = model.decode(sample).cpu()
-            save_image(sample.view(64, 1, 28, 28),
-                       'results/sample_' + str(epoch) + '.png')
+
+        if epoch % 100 == 0:
+            with torch.no_grad():
+                sample = torch.randn(64, 20).to(device)
+                sample = model.decode(sample).cpu()
+                save_image(sample.view(64, 1, 28, 28),
+                        'results/sample_' + str(epoch) + '.png')
