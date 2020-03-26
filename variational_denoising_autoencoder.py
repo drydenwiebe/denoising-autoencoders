@@ -59,7 +59,7 @@ n_epochs = 500
 # for adding noise to images
 noise_factor = 0.5
 # defines the size of the latent space
-latent_space = 8
+latent_space = 16
 # weight decay for ADAM
 weight_decay=1e-5
 # set the seed for PyTorch
@@ -108,7 +108,9 @@ class VAE(nn.Module):
 
 
 model = VAE().to(device)
-print(model)
+print(model + '\n')
+
+print("Running on: " + device + '\n')
 
 optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
@@ -158,7 +160,6 @@ def train(epoch):
 
     print('====> Epoch: {} Average loss: {:.4f}'.format(
           epoch, train_loss / len(train_loader.dataset)))
-
 
 @ignore_warnings
 def test(epoch):
