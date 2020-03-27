@@ -55,11 +55,11 @@ dropout = False
 # define the learning rate
 learning_rate = 1e-5
 # number of epochs to train the model
-n_epochs = 800
+n_epochs = 1000
 # for adding noise to images
 noise_factor = 0.5
 # defines the size of the latent space
-latent_space = 32
+latent_space = 64
 # weight decay for ADAM
 weight_decay=1e-5
 # set the seed for PyTorch
