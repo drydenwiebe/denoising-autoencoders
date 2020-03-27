@@ -36,7 +36,7 @@ parser.add_argument('--no-cuda', action='store_true', default=True,
                     help='enables CUDA training')
 parser.add_argument('--seed', type=int, default=1, metavar='S',
                     help='random seed (default: 1)')
-parser.add_argument('--log-interval', type=int, default=10, metavar='N',
+parser.add_argument('--log-interval', type=int, default=100, metavar='N',
                     help='how many batches to wait before logging training status')
 args = parser.parse_args()
 
@@ -55,7 +55,7 @@ dropout = False
 # define the learning rate
 learning_rate = 1e-5
 # number of epochs to train the model
-n_epochs = 500
+n_epochs = 800
 # for adding noise to images
 noise_factor = 0.5
 # defines the size of the latent space
