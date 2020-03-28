@@ -36,7 +36,7 @@ parser.add_argument('--no-cuda', action='store_true', default=True,
                     help='enables CUDA training')
 parser.add_argument('--seed', type=int, default=1, metavar='S',
                     help='random seed (default: 1)')
-parser.add_argument('--log-interval', type=int, default=10, metavar='N',
+parser.add_argument('--log-interval', type=int, default=100, metavar='N',
                     help='how many batches to wait before logging training status')
 args = parser.parse_args()
 
@@ -55,11 +55,11 @@ dropout = False
 # define the learning rate
 learning_rate = 1e-5
 # number of epochs to train the model
-n_epochs = 500
+n_epochs = 1000
 # for adding noise to images
 noise_factor = 0.5
 # defines the size of the latent space
-latent_space = 16
+latent_space = 64
 # weight decay for ADAM
 weight_decay=1e-5
 # set the seed for PyTorch
@@ -200,7 +200,7 @@ if __name__ == "__main__":
 
         if epoch % 100 == 0:
             with torch.no_grad():
-                sample = torch.randn(64, 20).to(device)
+                sample = torch.randn(batch_size, latent_space).to(device)
                 sample = model.decode(sample).cpu()
-                save_image(sample.view(64, 1, 28, 28),
+                save_image(sample.view(batch_size, 1, 28, 28),
                         'results/sample_' + str(epoch) + '.png')
