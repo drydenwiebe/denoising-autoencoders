@@ -55,7 +55,7 @@ dropout = False
 # define the learning rate
 learning_rate = 1e-4
 # number of epochs to train the model
-n_epochs = 1000
+n_epochs = 1500
 # for adding noise to images
 noise_factor = 0.5
 # defines the size of the latent space
@@ -124,9 +124,15 @@ def loss_function(recon_x, x, mu, logvar, z):
     # 0.5 * sum(1 + log(sigma^2) - mu^2 - sigma^2)
     KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
 
-    regularization = torch.sum(torch.abs(z))
+    #regularization = torch.sum(torch.abs(z))
 
-    return BCE + KLD + 10 * regularization
+    return BCE + KLD
+
+# Reconstruction loss only
+def reconstruction_loss(recon_x, x, mu, logvar, z):
+    BCE = F.binary_cross_entropy(recon_x, x.view(-1, 784), reduction='sum')
+
+    return BCE
 
 @ignore_warnings
 def train(epoch):
@@ -167,6 +173,8 @@ def train(epoch):
 def test(epoch):
     model.eval()
     test_loss = 0
+    test_loss_reconstruction = 0
+
     with torch.no_grad():
         for i, (data, _) in enumerate(test_loader):
             # add noise to the test images
@@ -181,15 +189,20 @@ def test(epoch):
 
             test_loss += loss_function(outputs, data, mu, logvar, z).item()
 
+            test_loss_reconstruction += reconstruction_loss(outputs, data, mu, logvar, z).item()
+
             if i == 0 and epoch % 100 == 0:
-                n = min(data.size(0), 8)
-                comparison = torch.cat([noisy_images[:n],
-                                      outputs.view(batch_size, 1, 28, 28)[:n]])
-                save_image(comparison.cpu(),
-                         'results/reconstruction_' + str(epoch) + '.png', nrow=n)
+                for i in range(0, 2):
+                    n = min(data.size(0), 8)
+                    comparison = torch.cat([noisy_images[:n + n * i],
+                                        outputs.view(batch_size, 1, 28, 28)[:n]])
+                    save_image(comparison.cpu(),
+                            'results/reconstruction_' + str(epoch) + ' ' + str(i) + '.png', nrow=n)
 
     test_loss /= len(test_loader.dataset)
+    test_loss_reconstruction /= len(test_loader.dataset)
     print('====> Test set loss: {:.4f}'.format(test_loss))
+    print('====> Test set reconstuction loss: {:.4f}'.format(test_loss_reconstruction))
 
 if __name__ == "__main__":
     for epoch in range(1, n_epochs + 1):
@@ -198,7 +211,8 @@ if __name__ == "__main__":
 
         if epoch % 100 == 0:
             with torch.no_grad():
-                sample = torch.randn(batch_size, latent_space).to(device)
-                sample = model.decode(sample).cpu()
-                save_image(sample.view(batch_size, 1, 28, 28),
-                        'results/sample_' + str(epoch) + '.png')
+                for i in range(0, 2): 
+                    sample = torch.randn(batch_size, latent_space).to(device)
+                    sample = model.decode(sample).cpu()
+                    save_image(sample.view(batch_size, 1, 28, 28),
+                            'results/sample_' + str(epoch) + ' ' + str(i) + '.png')
