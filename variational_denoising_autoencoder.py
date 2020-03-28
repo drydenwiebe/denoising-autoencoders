@@ -124,7 +124,19 @@ def loss_function(recon_x, x, mu, logvar, z):
     # 0.5 * sum(1 + log(sigma^2) - mu^2 - sigma^2)
     KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
 
-    #regularization = torch.sum(torch.abs(z))
+    regularization = torch.sum(torch.abs(z))
+
+    return BCE + KLD + 10 * regularization
+
+# Reconstruction + KL divergence losses summed over all elements and batch
+def loss_function_test(recon_x, x, mu, logvar, z):
+    BCE = F.binary_cross_entropy(recon_x, x.view(-1, 784), reduction='sum')
+
+    # see Appendix B from VAE paper:
+    # Kingma and Welling. Auto-Encoding Variational Bayes. ICLR, 2014
+    # https://arxiv.org/abs/1312.6114
+    # 0.5 * sum(1 + log(sigma^2) - mu^2 - sigma^2)
+    KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
 
     return BCE + KLD
 
@@ -179,7 +191,7 @@ def test(epoch):
 
             outputs, mu, logvar, z = model(noisy_images)
 
-            test_loss += loss_function(outputs, data, mu, logvar, z).item()
+            test_loss += loss_function_test(outputs, data, mu, logvar, z).item()
 
             if i == 0 and epoch % 100 == 0:
                 n = min(data.size(0), 8)
