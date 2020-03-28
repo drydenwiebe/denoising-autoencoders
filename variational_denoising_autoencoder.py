@@ -47,9 +47,9 @@ device = torch.device('cuda' if torch.cuda.is_available() and args.no_cuda else 
 transform = transforms.ToTensor()
 
 # Create training and test dataloaders
-num_workers = 4
+num_workers = 0
 # how many samples per batch to load
-batch_size = 1281
+batch_size = 128
 # if we use dropout or not
 dropout = False
 # define the learning rate
@@ -78,7 +78,7 @@ class VAE(nn.Module):
     def __init__(self):
         super(VAE, self).__init__()
 
-        self.fc1 = nn.Linear(784, 256).cuda()
+        self.fc1 = nn.Linear(784, 256)
         self.fc2 = nn.Linear(256, 128)
         self.fc31 = nn.Linear(128, latent_space)
         self.fc32 = nn.Linear(128, latent_space)
@@ -139,10 +139,12 @@ def train(epoch):
         noisy_images = np.clip(noisy_images, 0., 1.)
 
         # transfer the training data to the correct device
-        data = data.to(device)
-        noisy_images = noisy_images.to(device)
+        data.to(device)
+        noisy_images.to(device)
 
         optimizer.zero_grad()
+
+        print(noisy_images.device)
 
         outputs, mu, logvar, z = model.forward(noisy_images)
 
@@ -174,8 +176,8 @@ def test(epoch):
             noisy_images = np.clip(noisy_images, 0., 1.)
 
             # transfer the training data to the correct device
-            data = data.to(device)
-            noisy_images = noisy_images.to(device)
+            data.to(device)
+            noisy_images.to(device)
 
             outputs, mu, logvar, z = model(noisy_images)
 
