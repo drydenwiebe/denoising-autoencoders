@@ -53,7 +53,7 @@ batch_size = 128
 # if we use dropout or not
 dropout = False
 # define the learning rate
-learning_rate = 1e-5
+learning_rate = 1e-4
 # number of epochs to train the model
 n_epochs = 1000
 # for adding noise to images
@@ -112,7 +112,7 @@ print(str(model) + '\n')
 
 print("Running on: " + str(device) + '\n')
 
-optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+optimizer = optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
 
 # Reconstruction + KL divergence losses summed over all elements and batch
 def loss_function(recon_x, x, mu, logvar, z):
