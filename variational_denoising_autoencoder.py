@@ -139,12 +139,10 @@ def train(epoch):
         noisy_images = np.clip(noisy_images, 0., 1.)
 
         # transfer the training data to the correct device
-        data.to(device)
-        noisy_images.to(device)
+        data = data.to(device)
+        noisy_images = noisy_images.to(device)
 
         optimizer.zero_grad()
-
-        print(noisy_images.device)
 
         outputs, mu, logvar, z = model.forward(noisy_images)
 
@@ -176,8 +174,8 @@ def test(epoch):
             noisy_images = np.clip(noisy_images, 0., 1.)
 
             # transfer the training data to the correct device
-            data.to(device)
-            noisy_images.to(device)
+            data = data.to(device)
+            noisy_images = noisy_images.to(device)
 
             outputs, mu, logvar, z = model(noisy_images)
 
