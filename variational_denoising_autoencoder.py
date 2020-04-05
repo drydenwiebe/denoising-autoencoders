@@ -70,6 +70,7 @@ train_loader = torch.utils.data.DataLoader(
     datasets.MNIST('../data', train=True, download=True,
                    transform=transforms.ToTensor()),
     batch_size=batch_size, shuffle=True, **kwargs)
+
 test_loader = torch.utils.data.DataLoader(
     datasets.MNIST('../data', train=False, transform=transforms.ToTensor()),
     batch_size=batch_size, shuffle=True, **kwargs)
@@ -78,13 +79,13 @@ class VAE(nn.Module):
     def __init__(self):
         super(VAE, self).__init__()
 
-        self.fc1 = nn.Linear(784, 256)
+        self.fc1 = nn.Linear(28 * 28, 256)
         self.fc2 = nn.Linear(256, 128)
         self.fc31 = nn.Linear(128, latent_space)
         self.fc32 = nn.Linear(128, latent_space)
         self.fc4 = nn.Linear(latent_space, 128)
         self.fc5 = nn.Linear(128, 256)
-        self.fc6 = nn.Linear(256, 784)
+        self.fc6 = nn.Linear(256, 28 * 28)
 
     def encode(self, x):
         h1 = F.relu(self.fc1(x))
@@ -102,7 +103,7 @@ class VAE(nn.Module):
         return torch.sigmoid(self.fc6(h4))
 
     def forward(self, x):
-        mu, logvar = self.encode(x.view(-1, 784))
+        mu, logvar = self.encode(x.view(-1, 28 * 28))
         z = self.reparameterize(mu, logvar)
         return self.decode(z), mu, logvar, z
 
@@ -114,9 +115,10 @@ print("Running on: " + str(device) + '\n')
 
 optimizer = optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
 
-# Reconstruction + KL divergence losses summed over all elements and batch
+# define the loss functions
+# reconstruction + KL divergence losses summed over all elements and batch
 def loss_function(recon_x, x, mu, logvar, z):
-    BCE = F.binary_cross_entropy(recon_x, x.view(-1, 784), reduction='sum')
+    BCE = F.binary_cross_entropy(recon_x, x.view(-1, 28 * 28), reduction='sum')
 
     # see Appendix B from VAE paper:
     # Kingma and Welling. Auto-Encoding Variational Bayes. ICLR, 2014
@@ -134,6 +136,7 @@ def reconstruction_loss(recon_x, x, mu, logvar, z):
 
     return BCE
 
+# Define the training loop
 @ignore_warnings
 def train(epoch):
     model.train()
