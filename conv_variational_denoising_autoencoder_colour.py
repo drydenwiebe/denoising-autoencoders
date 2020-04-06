@@ -55,17 +55,17 @@ transform = transforms.ToTensor()
 # Create training and test dataloaders
 num_workers = 0
 # how many samples per batch to load
-batch_size = 512
+batch_size = 256
 # if we use dropout or not
 dropout = False
 # define the learning rate
 learning_rate = 1e-4
 # number of epochs to train the model
-n_epochs = 1500
+n_epochs = 500
 # for adding noise to images
-noise_factor = 0.25
+noise_factor = 0.5
 # defines the size of the latent space
-latent_space = 512
+latent_space = 64
 # weight decay for ADAM
 weight_decay=1e-6
 # set the seed for PyTorch
@@ -315,10 +315,10 @@ if __name__ == "__main__":
         train(epoch)
         test(epoch)
 
-        if epoch % 1 == 0:
+        if epoch % 100 == 0:
             with torch.no_grad():
                 for i in range(0, 2): 
                     sample = torch.randn(batch_size, latent_space).to(device)
                     sample = model.decode(sample).cpu()
-                    save_image(sample.view(sample.shape[0], 3, 64, 64),
+                    save_image(sample.view(batch_size, 3, 32, 32),
                             'results/sample_' + str(epoch) + ' ' + str(i) + '.png')
