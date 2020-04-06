@@ -315,10 +315,10 @@ if __name__ == "__main__":
         train(epoch)
         test(epoch)
 
-        if epoch % 50 == 0:
+        if epoch % 1 == 0:
             with torch.no_grad():
                 for i in range(0, 2): 
                     sample = torch.randn(batch_size, latent_space).to(device)
                     sample = model.decode(sample).cpu()
-                    save_image(sample.view(batch_size, 1, 28, 28),
+                    save_image(sample.view(sample.shape[0], 3, 64, 64),
                             'results/sample_' + str(epoch) + ' ' + str(i) + '.png')
