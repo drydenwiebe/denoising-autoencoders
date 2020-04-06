@@ -65,7 +65,7 @@ n_epochs = 1500
 # for adding noise to images
 noise_factor = 0.25
 # defines the size of the latent space
-latent_space = 64
+latent_space = 512
 # weight decay for ADAM
 weight_decay=1e-6
 # set the seed for PyTorch
