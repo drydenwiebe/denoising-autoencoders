@@ -55,7 +55,7 @@ transform = transforms.ToTensor()
 # Create training and test dataloaders
 num_workers = 0
 # how many samples per batch to load
-batch_size = 256
+batch_size = 512
 # if we use dropout or not
 dropout = False
 # define the learning rate
@@ -290,7 +290,7 @@ def test(epoch):
 
             test_loss_reconstruction += reconstruction_loss(outputs, data, mu, logvar, z).item()
 
-            if i == 0 and epoch % 100 == 0:
+            if i == 0 and epoch % 50 == 0:
                 for i in range(0, 2):
                     n = min(data.size(0), 8)
                     comparison = torch.cat([noisy_images[:n + n * i],
@@ -315,7 +315,7 @@ if __name__ == "__main__":
         train(epoch)
         test(epoch)
 
-        if epoch % 100 == 0:
+        if epoch % 50 == 0:
             with torch.no_grad():
                 for i in range(0, 2): 
                     sample = torch.randn(batch_size, latent_space).to(device)
