@@ -59,15 +59,15 @@ batch_size = 256
 # if we use dropout or not
 dropout = False
 # define the learning rate
-learning_rate = 1e-3
+learning_rate = 1e-4
 # number of epochs to train the model
 n_epochs = 1500
 # for adding noise to images
-noise_factor = 0.5
+noise_factor = 0.25
 # defines the size of the latent space
 latent_space = 64
 # weight decay for ADAM
-weight_decay=1e-5
+weight_decay=1e-6
 # set the seed for PyTorch
 torch.manual_seed(args.seed)
 
@@ -82,7 +82,7 @@ test_loader = torch.utils.data.DataLoader(
     batch_size=batch_size, shuffle=True, **kwargs)
 
 # Read Lena image
-lena = PILImage.open('resources/lena.jpg')
+lena = PILImage.open('resources/calibration.jpg')
 
 def transfor_mnist_batch(batch_raw, batch_size=128, change_colors=True, show=False):
     batch_raw = np.transpose(batch_raw, (0, 2, 3, 1))
@@ -167,7 +167,6 @@ class VAE(nn.Module):
         self.conv8 = nn.ConvTranspose2d(16, 3, kernel_size=3, stride=1, padding=1, bias=False)
 
         self.relu = nn.ReLU()
-        self.sigmoid = torch.sigmoid()
 
     def encode(self, x):
         conv1 = self.relu(self.bn1(self.conv1(x)))
@@ -195,7 +194,7 @@ class VAE(nn.Module):
         conv6 = self.relu(self.bn6(self.conv6(conv5)))
         conv7 = self.relu(self.bn7(self.conv7(conv6)))
 
-        return self.sigmoid(self.conv8(conv7).view(-1, 3, 64, 64))
+        return torch.sigmoid(self.conv8(conv7).view(-1, 3, 64, 64))
 
     def forward(self, x):
         mu, logvar = self.encode(x)
