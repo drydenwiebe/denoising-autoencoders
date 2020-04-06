@@ -50,7 +50,7 @@ transform = transforms.ToTensor()
 num_workers = 0
 # how many samples per batch to load
 batch_size = 128
-# if we use dropout or not
+# if we use dropout or notv
 dropout = False
 # define the learning rate
 learning_rate = 1e-4

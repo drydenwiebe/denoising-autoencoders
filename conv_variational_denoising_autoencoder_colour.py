@@ -290,7 +290,7 @@ def test(epoch):
 
             test_loss_reconstruction += reconstruction_loss(outputs, data, mu, logvar, z).item()
 
-            if i == 0 and epoch % 1 == 0:
+            if i == 0 and epoch % 100 == 0:
                 for i in range(0, 2):
                     n = min(data.size(0), 8)
                     comparison = torch.cat([noisy_images[:n + n * i],
