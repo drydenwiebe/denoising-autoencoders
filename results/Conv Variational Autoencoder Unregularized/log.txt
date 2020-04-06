@@ -1,0 +1,59 @@
+VAE(
+  (conv1): Conv2d(3, 16, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+  (bn1): BatchNorm2d(16, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  (conv2): Conv2d(16, 32, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+  (bn2): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  (conv3): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+  (bn3): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  (conv4): Conv2d(32, 16, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+  (bn4): BatchNorm2d(16, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  (fc1): Linear(in_features=4096, out_features=512, bias=True)
+  (fc_bn1): BatchNorm1d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  (fc21): Linear(in_features=512, out_features=512, bias=True)
+  (fc22): Linear(in_features=512, out_features=512, bias=True)
+  (fc3): Linear(in_features=512, out_features=512, bias=True)
+  (fc_bn3): BatchNorm1d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  (fc4): Linear(in_features=512, out_features=4096, bias=True)
+  (fc_bn4): BatchNorm1d(4096, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  (conv5): ConvTranspose2d(16, 32, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), output_padding=(1, 1), bias=False)
+  (bn5): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  (conv6): ConvTranspose2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+  (bn6): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  (conv7): ConvTranspose2d(32, 16, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), output_padding=(1, 1), bias=False)
+  (bn7): BatchNorm2d(16, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  (conv8): ConvTranspose2d(16, 3, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+  (relu): ReLU()
+)
+
+Running on: cuda
+
+Train Epoch: 1 [0/60000 (0%)]	Loss: 9575.424805
+Train Epoch: 1 [25600/60000 (43%)]	Loss: 8246.725586
+Train Epoch: 1 [51200/60000 (85%)]	Loss: 7915.207031
+====> Epoch: 1 Average loss: 8290.6269
+====> Test set loss: 7912.2441
+====> Test set reconstuction loss: 7858.0208
+Train Epoch: 2 [0/60000 (0%)]	Loss: 7829.795898
+Train Epoch: 2 [25600/60000 (43%)]	Loss: 7700.554688
+Train Epoch: 2 [51200/60000 (85%)]	Loss: 7607.132324
+====> Epoch: 2 Average loss: 7720.7242
+====> Test set loss: 7569.5810
+====> Test set reconstuction loss: 7493.0764
+Train Epoch: 3 [0/60000 (0%)]	Loss: 7534.038086
+Train Epoch: 3 [25600/60000 (43%)]	Loss: 7448.505371
+Train Epoch: 3 [51200/60000 (85%)]	Loss: 7330.998535
+====> Epoch: 3 Average loss: 7432.1898
+====> Test set loss: 7168.1591
+====> Test set reconstuction loss: 7068.5728
+Train Epoch: 4 [0/60000 (0%)]	Loss: 7324.875488
+Train Epoch: 4 [25600/60000 (43%)]	Loss: 7224.349609
+Train Epoch: 4 [51200/60000 (85%)]	Loss: 7324.198730
+====> Epoch: 4 Average loss: 7211.9137
+====> Test set loss: 7075.6062
+====> Test set reconstuction loss: 6971.4764
+Train Epoch: 5 [0/60000 (0%)]	Loss: 7164.380859
+Train Epoch: 5 [25600/60000 (43%)]	Loss: 7191.254883
+Train Epoch: 5 [51200/60000 (85%)]	Loss: 7059.686035
+====> Epoch: 5 Average loss: 7145.1800
+====> Test set loss: 7035.8984
+====> Test set reconstuction loss: 6930.7302

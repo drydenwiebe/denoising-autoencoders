@@ -208,7 +208,6 @@ class VAE(nn.Module):
 # define the loss functions
 # reconstruction + KL divergence losses summed over all elements and batch
 def loss_function(recon_x, x, mu, logvar, z):
-
     BCE = F.binary_cross_entropy(recon_x, x.view(-1, 64 * 64 * 3), reduction='sum')
 
     # see Appendix B from VAE paper:
