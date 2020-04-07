@@ -55,7 +55,7 @@ transform = transforms.ToTensor()
 # Create training and test dataloaders
 num_workers = 0
 # how many samples per batch to load
-batch_size = 256
+batch_size = 512
 # if we use dropout or not
 dropout = False
 # define the learning rate
