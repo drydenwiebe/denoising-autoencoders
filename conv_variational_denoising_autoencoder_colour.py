@@ -65,7 +65,7 @@ n_epochs = 500
 # for adding noise to images
 noise_factor = 0.5
 # defines the size of the latent space
-latent_space = 64
+latent_space = 512
 # weight decay for ADAM
 weight_decay=1e-6
 # set the seed for PyTorch
@@ -320,5 +320,5 @@ if __name__ == "__main__":
                 for i in range(0, 2): 
                     sample = torch.randn(batch_size, latent_space).to(device)
                     sample = model.decode(sample).cpu()
-                    save_image(sample.view(batch_size, 3, 32, 32),
+                    save_image(sample.view(batch_size, 3, 64, 64),
                             'results/sample_' + str(epoch) + ' ' + str(i) + '.png')
