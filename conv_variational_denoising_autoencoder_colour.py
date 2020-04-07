@@ -312,13 +312,13 @@ optimizer = optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight
 
 if __name__ == "__main__":
     for epoch in range(1, n_epochs + 1):
-        #train(epoch)
-        #test(epoch)
+        train(epoch)
+        test(epoch)
 
-        if epoch % 1 == 0:
+        if epoch % 50 == 0:
             with torch.no_grad():
                 for i in range(0, 2): 
-                    sample = torch.randn(batch_size, latent_space).to(device)
+                    sample = torch.randn(128, latent_space).to(device)
                     sample = model.decode(sample).cpu()
-                    save_image(sample.view(batch_size, 3, 64, 64),
+                    save_image(sample.view(128, 3, 64, 64),
                             'results/sample_' + str(epoch) + ' ' + str(i) + '.png')
