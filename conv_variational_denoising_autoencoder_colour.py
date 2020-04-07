@@ -312,10 +312,10 @@ optimizer = optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight
 
 if __name__ == "__main__":
     for epoch in range(1, n_epochs + 1):
-        train(epoch)
-        test(epoch)
+        #train(epoch)
+        #test(epoch)
 
-        if epoch % 100 == 0:
+        if epoch % 1 == 0:
             with torch.no_grad():
                 for i in range(0, 2): 
                     sample = torch.randn(batch_size, latent_space).to(device)
