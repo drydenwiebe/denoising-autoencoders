@@ -59,9 +59,9 @@ batch_size = 512
 # if we use dropout or not
 dropout = False
 # define the learning rate
-learning_rate = 1e-4
+learning_rate = 5e-4
 # number of epochs to train the model
-n_epochs = 500
+n_epochs = 250
 # for adding noise to images
 noise_factor = 0.5
 # defines the size of the latent space
