@@ -218,7 +218,7 @@ def loss_function(recon_x, x, mu, logvar, z):
 
     regularization = torch.sum(torch.abs(z))
 
-    return BCE + KLD + 100 * regularization
+    return BCE + KLD + 10 * regularization
 
 # reconstuction loss only
 def reconstruction_loss(recon_x, x, mu, logvar, z):
