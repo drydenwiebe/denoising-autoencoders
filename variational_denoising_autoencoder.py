@@ -57,7 +57,7 @@ learning_rate = 1e-4
 # number of epochs to train the model
 n_epochs = 1500
 # for adding noise to images
-noise_factor = 0.75
+noise_factor = 1.0
 # defines the size of the latent space
 latent_space = 64
 # weight decay for ADAM
