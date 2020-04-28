@@ -57,7 +57,7 @@ learning_rate = 1e-4
 # number of epochs to train the model
 n_epochs = 1500
 # for adding noise to images
-noise_factor = 0.5
+noise_factor = 0.75
 # defines the size of the latent space
 latent_space = 64
 # weight decay for ADAM
@@ -129,7 +129,7 @@ def loss_function(recon_x, x, mu, logvar, z):
     # 0.5 * sum(1 + log(sigma^2) - mu^2 - sigma^2)
     KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
 
-    regularization = torch.sum(torch.abs(z))
+    regularization = (torch.sum(z.pow(2))).pow(0.5)
 
     return BCE + KLD + 100 * regularization
 

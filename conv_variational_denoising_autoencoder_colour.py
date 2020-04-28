@@ -84,7 +84,7 @@ test_loader = torch.utils.data.DataLoader(
 # Read Lena image
 lena = PILImage.open('resources/calibration.jpg')
 
-def transfor_mnist_batch(batch_raw, batch_size=128, change_colors=True, show=False):
+def transfor_mnist_batch(batch_raw, batch_size=128, change_colors=True, show=True):
     batch_raw = np.transpose(batch_raw, (0, 2, 3, 1))
 
     batch_size = batch_raw.shape[0]
@@ -169,6 +169,7 @@ class VAE(nn.Module):
         self.relu = nn.ReLU()
 
     def encode(self, x):
+        print(x.shape)
         conv1 = self.relu(self.bn1(self.conv1(x)))
         conv2 = self.relu(self.bn2(self.conv2(conv1)))
         conv3 = self.relu(self.bn3(self.conv3(conv2)))
@@ -187,12 +188,17 @@ class VAE(nn.Module):
             return mu
 
     def decode(self, z):
+        print(z.shape)
         fc3 = self.relu(self.fc_bn3(self.fc3(z)))
+        print(fc3.shape)
         fc4 = self.relu(self.fc_bn4(self.fc4(fc3))).view(-1, 16, 16, 16)
-
+        print(fc4.shape)
         conv5 = self.relu(self.bn5(self.conv5(fc4)))
+        print(conv5.shape)
         conv6 = self.relu(self.bn6(self.conv6(conv5)))
+        print(conv6.shape)
         conv7 = self.relu(self.bn7(self.conv7(conv6)))
+        print(conv7.shape)
 
         return torch.sigmoid(self.conv8(conv7).view(-1, 3, 64, 64))
 
