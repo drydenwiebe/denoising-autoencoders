@@ -70,6 +70,8 @@ latent_space = 512
 weight_decay=1e-6
 # set the seed for PyTorch
 torch.manual_seed(args.seed)
+# set the path for the background image
+image_path = 'resources/calibration.jpg'
 
 kwargs = {'num_workers': 1, 'pin_memory': True} if torch.cuda.is_available() else {}
 train_loader = torch.utils.data.DataLoader(
@@ -82,7 +84,7 @@ test_loader = torch.utils.data.DataLoader(
     batch_size=batch_size, shuffle=True, **kwargs)
 
 # Read Lena image
-lena = PILImage.open('resources/calibration.jpg')
+image = PILImage.open(image_path)
 
 def transfor_mnist_batch(batch_raw, batch_size=128, change_colors=True, show=True):
     batch_raw = np.transpose(batch_raw, (0, 2, 3, 1))
@@ -102,9 +104,9 @@ def transfor_mnist_batch(batch_raw, batch_size=128, change_colors=True, show=Tru
 
     for i in range(0, batch_size):
         # Take a random crop of the Lena image (background)
-        x_c = np.random.randint(0, lena.size[0] - 64)
-        y_c = np.random.randint(0, lena.size[1] - 64)
-        image = lena.crop((x_c, y_c, x_c + 64, y_c + 64))
+        x_c = np.random.randint(0, image.size[0] - 64)
+        y_c = np.random.randint(0, image.size[1] - 64)
+        image = image.crop((x_c, y_c, x_c + 64, y_c + 64))
         image = np.asarray(image) / 255.0
 
         if change_colors:
