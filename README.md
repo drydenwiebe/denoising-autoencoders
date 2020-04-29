@@ -6,3 +6,5 @@ variational_denoising_autoencoder.py trains a simple, fully connected variationa
 conv_variational_denoising_autoencoder.py trains a more complicated, convolutional variational autoencoder autoencoder (to de-noise) on the MNIST dataset with colours added.
 
 requirements.txt is the requirements for the environment to run this project.
+
+The raw expirement results are located in the folder /results in the branch results.
